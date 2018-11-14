@@ -1,16 +1,45 @@
+<#
+.SYNOPSIS
+
+Recursive search in given $DirectoryToSearchThrough for $IncludeFilePattern. 
+Adds file header to all found files.
+
+.EXAMPLE
+C:\PS>$fh = "///`r`n// MyCompany Bla Bla Bla`r`n///`r`n"
+C:\PS>Add-FileHeader -DirectoryToSearchThrough . -IncludeFilePattern "*.cs" -FileHeaderToAdd $fh
+
+
+
+
+#>
 
 function Add-FileHeader {
+        [CmdletBinding()]
         Param(
-                [string] $DirectoryToSearchThrough ,
-                [string] $FilePrefixToSearch,
-                [sring] $FileSuffixToExclude
+                [Parameter(Mandatory=$true)]
+                [ValidateScript({ Test-Path $_ })] 
+                [string] $DirectoryToSearchThrough,
+
+                [Parameter(Mandatory=$true)]
+                [ValidateNotNullOrEmpty ()]
+                [ValidateScript({ $_ -ge 1 })] 
+                [string[]] $IncludeFilePattern,
+
+                [Parameter(Mandatory=$true)]
+                [ValidateNotNull()] 
+                [string] $FileHeaderToAdd,
+
+                [Parameter(Mandatory=$false)]
+                [ValidateNotNullOrEmpty ()]
+                [ValidateScript({ $_ -ge 1 })] 
+                [string[]] $ExcludeFilePattern
         )
 
-        Get-ChildItem -Path $DirectoryToSearchThrough -Include $FilePrefixToSearch -Exclude $FileSuffixToExclude -Recurse | ForEach-Object {
+        Get-ChildItem -Path $DirectoryToSearchThrough -Include $IncludeFilePattern -Exclude $ExcludeFilePattern -Recurse | `
+        ForEach-Object {
                 Write-Host "Working on $($_.Name)"
-                $fileName = $_.Name
 
                 $content = Get-Content $_; 
-                Set-Content -Path $_.FullName -Value "/// Test`n///MyCompany`n////`n", $content;
+                Set-Content -Path $_.FullName -Value $FileHeaderToAdd, $content;
         }
 }
